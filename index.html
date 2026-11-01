@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Admin SMP Plus An-Nuur</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; position: relative; }
+        .phone-container { width: 100%; max-width: 480px; background-color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .screen { display: none; flex-direction: column; width: 100%; flex-grow: 1; padding: 20px; animation: fadeIn 0.3s ease-in-out; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .app-header { background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; z-index: 100; }
+        .logout-btn { background: none; border: 1px solid #ffffff66; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .back-btn { background: none; border: none; color: #2c3e50; font-size: 24px; cursor: pointer; display: flex; align-items: center; margin-bottom: 15px; font-weight: bold; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #555; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #3498db; }
+        .btn-primary { background-color: #3498db; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-success { background-color: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-danger-sm { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-warning-sm { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .menu-card { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .menu-card.disabled { background-color: #f1f5f9; border-color: #cbd5e1; cursor: not-allowed; opacity: 0.6; }
+        .menu-card .icon { font-size: 32px; margin-bottom: 10px; display: block; }
+        .menu-card .title { font-size: 14px; font-weight: 600; color: #2c3e50; display: block; }
+        .student-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .student-name { font-weight: 600; font-size: 14px; color: #2c3e50; }
+        .absensi-options { display: flex; gap: 5px; }
+        .absensi-options label { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .absensi-options input[type="radio"] { display: none; }
+        .absensi-options input[type="radio"]:checked + label.h { background-color: #2ecc71; color: white; border-color: #2ecc71; }
+        .absensi-options input[type="radio"]:checked + label.s { background-color: #f1c40f; color: white; border-color: #f1c40f; }
+        .absensi-options input[type="radio"]:checked + label.i { background-color: #3498db; color: white; border-color: #3498db; }
+        .absensi-options input[type="radio"]:checked + label.a { background-color: #e74c3c; color: white; border-color: #e74c3c; }
+        .welcome-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; }
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .rekap-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; min-width: 500px; }
+        .rekap-table th { background-color: #2c3e50; color: white; padding: 10px 6px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .rekap-table td { padding: 10px 6px; border-bottom: 1px solid #eee; text-align: center; }
+        .rekap-table td.name-col { text-align: left; font-weight: 600; position: sticky; left: 0; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .badge-nilai { background-color: #e8f4fd; color: #2980b9; padding: 4px 6px; border-radius: 4px; font-weight: bold; }
+        .admin-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .admin-data-list { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; padding: 5px; }
+        .admin-data-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        
+        .modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background-color: rgba(0,0,0,0.7) !important; z-index: 99999999 !important; display: none; justify-content: center; align-items: center; }
+        .modal-content { background-color: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+        
+        /* Footer Identitas */
+        .app-footer { background-color: #2c3e50; color: #ecf0f1; text-align: center; padding: 12px 15px; font-size: 11px; margin-top: auto; border-top: 3px solid #3498db; line-height: 1.5; }
+        .app-footer strong { color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL EDIT/DISTRIBUSI TUGAS GURU -->
+    <div id="modalEditGuru" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 5px; color:#2c3e50;">✏️ Distribusi Tugas Guru</h3>
+            <input type="hidden" id="editGuruIndex">
+            <div class="form-group"><label role="none" for="editGuruNama">Nama Lengkap</label><input type="text" id="editGuruNama" class="form-control" readonly style="background:#f1f5f9;"></div>
+            <div class="form-group"><label role="none" for="editGuruMapelMultiSelect">Mata Pelajaran Diampu</label><select id="editGuruMapelMultiSelect" class="form-control" multiple style="height: 110px; padding:5px; font-size:13px;"></select></div>
+            <div class="form-group"><label role="none" for="editGuruKelasMultiSelect">Tugaskan di Kelas Mana?</label><select id="editGuruKelasMultiSelect" class="form-control" multiple style="height: 110px; padding:5px; font-size:13px;"></select></div>
+            <div style="display: flex; gap: 10px; margin-top:15px;"><button class="btn-primary" onclick="adminProsesSimpanEditGuru()" style="background-color: #2ecc71; margin-top:0;">Simpan Perubahan</button><button class="btn-primary" onclick="tutupModalEditGuru()" style="background-color: #95a5a6; margin-top:0;">Batal</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL PINDAH KELAS SISWA -->
+    <div id="modalPindahSiswa" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px; border-bottom: 2px solid #e74c3c; padding-bottom: 5px; color:#c0392b;">🔄 Pindahkan Siswa</h3>
+            <input type="hidden" id="pindahSiswaIndex">
+            <div class="form-group"><label role="none" for="pindahSiswaNamaDisplay">Nama Siswa</label><input type="text" id="pindahSiswaNamaDisplay" class="form-control" readonly style="background:#f1f5f9;"></div>
+            <div class="form-group"><label role="none" for="pindahSiswaTargetKelas">Pindah ke Kelas Tujuan:</label><select id="pindahSiswaTargetKelas" class="form-control"></select></div>
+            <div style="display: flex; gap: 10px; margin-top:15px;"><button class="btn-primary" onclick="adminProsesPindahSiswa()" style="background-color: #e74c3c; margin-top:0;">Pindahkan</button><button class="btn-primary" onclick="tutupModalPindahSiswa()" style="background-color: #95a5a6; margin-top:0;">Batal</button></div>
+        </div>
+    </div>
+
+    <div class="phone-container">
+        <div id="appHeader" class="app-header" style="display: none;">
+            <span>E-Admin Guru</span>
+            <button class="logout-btn" onclick="logout()">Keluar</button>
+        </div>
+
+        <!-- LAYAR LOGIN -->
+        <div id="screenLogin" class="screen active" style="justify-content: center; min-height: 100vh; padding: 30px 20px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <!-- Menggunakan file logo.jpg lokal yang ada di dalam folder -->
+                <img src="logo.jpg" alt="Logo Sekolah" style="width: 90px; height: 90px; margin-bottom: 12px; object-fit: contain; border-radius: 50%;">
+                <h2 style="color: #2c3e50;">SMP PLUS AN-NUUR</h2>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group"><label role="none" for="username">Username</label><input type="text" id="username" class="form-control" required></div>
+                <div class="form-group"><label role="none" for="password">Password</label><input type="password" id="password" class="form-control" required></div>
+                <button type="submit" class="btn-primary">Masuk</button>
+            </form>
+            <div class="app-footer" style="margin-top: 30px; border-radius: 8px;">
+                <strong>E-Admin Sekolah v2.0</strong><br>
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong><br>
+                Instansi: <strong>SMP Plus An-Nuur</strong>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="screenDashboard" class="screen">
+            <div class="welcome-section"><h3>Halo, <span id="teacherName">Guru</span>!</h3><div id="teacherInfoBadge" class="info-guru-badge">Mapel: -</div></div>
+            <div id="adminMenuButton" class="menu-card" onclick="openAdminPanelScreen()" style="margin-bottom: 15px; background: #fffbeb; border-color: #f59e0b; display: none;"><span class="icon">🔑</span><span class="title" style="color:#d97706; font-weight:bold;">PANEL ADMIN</span></div>
+            <div class="main-class-selector">
+                <label role="none" for="mainDashboardKelasSelect">🏫 Pilih Kelas:</label>
+                <select id="mainDashboardKelasSelect" class="form-control" onchange="handleMainKelasChange()"><option value="">-- Pilih Kelas --</option></select>
+                <p id="classSelectedStatus" style="font-size: 12px; font-weight: bold; margin-top: 6px; color: #dc2626;">⚠️ Pilih kelas untuk mengaktifkan fitur.</p>
+            </div>
+            <div class="menu-grid">
+                <div class="menu-card disabled" id="menuAbsen" onclick="checkAndNavigate('screenAbsensi')"><span class="icon">📝</span><span class="title">Absensi</span></div>
+                <div class="menu-card disabled" id="menuTugas" onclick="checkAndNavigateNilai('Tugas')"><span class="icon">📚</span><span class="title">Nilai Tugas</span></div>
+                <div class="menu-card disabled" id="menuUlangan" onclick="checkAndNavigateNilai('Ulangan')"><span class="icon">💯</span><span class="title">Nilai UH</span></div>
+                <div class="menu-card disabled" id="menuUjian" onclick="checkAndNavigateNilai('Ujian')"><span class="icon">🎓</span><span class="title">Ujian PAS</span></div>
+            </div>
+            <div class="menu-card disabled" id="menuRekap" onclick="checkAndNavigateRekap()" style="margin-top: 15px; background: #e8f4fd;"><span class="icon">📊</span><span class="title">Rekap Rapor Akhir</span></div>
+            
+            <div class="app-footer" style="margin-top: 20px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+
+        <!-- LAYAR ABSENSI -->
+        <div id="screenAbsensi" class="screen">
+            <button class="back-btn" onclick="navigateTo('screenDashboard')">← Absensi</button>
+            <div class="form-group"><label role="none" for="absenTanggal">Tanggal Pertemuan</label><input type="date" id="absenTanggal" class="form-control"></div>
+            <div class="form-group"><label role="none" for="absenBab">Bab Pelajaran</label><input type="text" id="absenBab" class="form-control" placeholder="Contoh: Bab 1 - Algoritma"></div>
+            <div class="form-group"><label role="none" for="absenMateri">Materi Pembelajaran</label><input type="text" id="absenMateri" class="form-control" placeholder="Contoh: Berpikir Komputasional"></div>
+            <div style="font-size:12px; font-weight:bold; color:#7f8c8d; margin-bottom:5px;" id="totalMuridAbsenLabel">Total Murid: 0</div>
+            <div id="absenSiswaListContainer" style="flex-grow: 1; overflow-y:auto; max-height:280px; margin-bottom:15px;"></div>
+            <button class="btn-primary" onclick="simpanAbsensiMulti()">Simpan Absensi Pertemuan</button>
+            <button class="btn-primary" style="background-color: #f39c12;" onclick="bukaRekapSpesifik('Absen')">Lihat Rekap Seluruh Pertemuan</button>
+            
+            <div class="app-footer" style="margin-top: 15px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+
+        <!-- LAYAR INPUT NILAI -->
+        <div id="screenNilai" class="screen">
+            <button class="back-btn" onclick="navigateTo('screenDashboard')">← <span id="nilaiTitle">Nilai</span></button>
+            <div class="form-group">
+                <label role="none" for="nilaiModeSelect">Opsi Pengisian Nilai:</label>
+                <select id="nilaiModeSelect" class="form-control" onchange="toggleMetodeNilai()">
+                    <option value="baru">➕ Buat Komponen Baru</option>
+                    <option value="susulan">📝 Pilih Komponen yang Sudah Ada (Susulan/Remedial)</option>
+                </select>
+            </div>
+            <div class="form-group" id="groupKomponenBaru">
+                <label role="none" for="nilaiKeterangan">Keterangan Komponen Baru</label>
+                <input type="text" id="nilaiKeterangan" class="form-control" placeholder="Contoh: Tugas 1 atau UH 1">
+            </div>
+            <div class="form-group" id="groupKomponenLama" style="display:none;">
+                <label role="none" for="nilaiKomponenEksistingSelect">Pilih Komponen Nilai:</label>
+                <select id="nilaiKomponenEksistingSelect" class="form-control" onchange="loadNilaiKomponenLama()"></select>
+            </div>
+            <div style="font-size:12px; font-weight:bold; color:#7f8c8d; margin-bottom:5px;" id="totalMuridNilaiLabel">Total Murid: 0</div>
+            <div id="inputNilaiSiswaContainer" style="flex-grow: 1; overflow-y:auto; max-height:280px; margin-bottom:15px;"></div>
+            <button class="btn-primary" onclick="simpanNilaiMulti()">Simpan Data Nilai</button>
+            <button class="btn-primary" style="background-color: #f39c12;" onclick="bukaRekapSpesifik('Nilai')">Lihat Rekap Nilai Fitur Ini</button>
+            
+            <div class="app-footer" style="margin-top: 15px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+
+        <!-- LAYAR REKAP SPESIFIK -->
+        <div id="screenRekapSpesifik" class="screen">
+            <button id="btnBackRekapSpesifik" class="back-btn" onclick="navigateTo('screenDashboard')">← Kembali</button>
+            <h3 id="judulRekapSpesifik" style="margin-bottom: 10px; color: #2c3e50; font-size:16px;">Rekap</h3>
+            <div class="table-responsive">
+                <table class="rekap-table" id="tabelRekapSpesifikExcel">
+                    <thead id="thRekapSpesifik"></thead>
+                    <tbody id="tbRekapSpesifik"></tbody>
+                </table>
+            </div>
+            <button class="btn-success" onclick="eksporKeExcelSpesifik()">📥 Unduh File Excel (.xlsx)</button>
+            
+            <div class="app-footer" style="margin-top: 15px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+
+        <!-- LAYAR REKAP TOTAL -->
+        <div id="screenRekap" class="screen">
+            <button class="back-btn" onclick="navigateTo('screenDashboard')">← Rekap Total</button>
+            <div class="table-responsive"><table class="rekap-table" id="tabelRekapExcel"><thead><tr><th style="text-align: left; position:sticky; left:0; background:#2c3e50; color:white;">No</th><th style="text-align: left; position:sticky; left:50px; background:#2c3e50; color:white;">Nama</th><th>Rata Absen</th><th>Rata Tugas</th><th>Rata UH</th><th>PAS</th><th>Nilai Akhir</th></tr></thead><tbody id="rekap-siswa-body"></tbody></table></div>
+            <button class="btn-success" onclick="eksporKeExcelTotal()">📥 Unduh Excel Rapor Total</button>
+            
+            <div class="app-footer" style="margin-top: 15px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+
+        <!-- LAYAR PANEL CONTROL ADMIN -->
+        <div id="screenAdminPanel" class="screen" style="overflow-y: auto; height: 100vh; padding-bottom: 50px;">
+            <button class="back-btn" onclick="navigateTo('screenDashboard')">← Admin Panel</button>
+            
+            <div class="admin-box" style="border: 1px solid #3498db; background: #f0f9ff;">
+                <p style="font-weight: bold; color: #2980b9; margin-bottom: 5px;">📋 Import Siswa Massal</p>
+                <select id="admImportKelasSelect" class="form-control"></select>
+                <textarea id="admExcelPasteArea" class="form-control" rows="2" placeholder="Paste nama baris demi baris..."></textarea>
+                <button class="btn-primary" onclick="adminProsesImportExcelMassal()" style="margin-top:5px; background-color:#3498db;">⚡ Import Massal</button>
+            </div>
+
+            <div class="admin-box" style="border: 1px solid #e67e22; background: #fffaf5;">
+                <p style="font-weight: bold; color: #d35400; margin-bottom: 5px;">➕ Kelola Master Mapel</p>
+                <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+                    <input type="text" id="admMapelNama" class="form-control" placeholder="Contoh: Informatika">
+                    <button class="btn-primary" onclick="adminTambahMapel()" style="margin-top:0; padding:0 15px; background-color:#d35400;">Tambah</button>
+                </div>
+                <div class="admin-data-list" id="admMapelListContainer"></div>
+            </div>
+            
+            <div class="admin-box" style="border: 1px solid #9b59b6; background: #faf5ff;">
+                <p style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;">🔄 Daftar Kontrol & Distribusi Guru</p>
+                <div class="admin-data-list" id="admGuruListContainer"></div>
+                
+                <div style="margin-top: 10px; border-top: 1px dashed #9b59b6; padding-top: 10px;">
+                    <p style="font-size: 12px; font-weight: bold; color: #8e44ad; margin-bottom: 4px;">➕ Tambah Akun Guru Baru:</p>
+                    <div class="form-group"><input type="text" id="admGuruNamaInput" class="form-control" placeholder="Nama Guru Lengkap"></div>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="admGuruUsernameInput" class="form-control" placeholder="Username">
+                        <input type="text" id="admGuruPassInput" class="form-control" placeholder="Password">
+                    </div>
+                    <button class="btn-primary" onclick="adminTambahGuruBaru()" style="background-color: #9b59b6; margin-top:8px;">➕ Daftarkan Akun Guru</button>
+                </div>
+            </div>
+
+            <!-- KOTAK KELOLA SISWA -->
+            <div class="admin-box" style="border: 1px solid #e74c3c; background: #fff5f5;">
+                <p style="font-weight: bold; color: #c0392b; margin-bottom: 5px;">👤 Kelola Data Siswa (Hapus, Pindah, & Tambah)</p>
+                <select id="admFilterKelasSiswa" class="form-control" onchange="renderListSiswaAdmin()"></select>
+                <div class="admin-data-list" id="admSiswaListContainer"></div>
+                
+                <div style="margin-top: 10px; border-top: 1px dashed #e74c3c; padding-top: 10px;">
+                    <p style="font-size: 12px; font-weight: bold; color: #c0392b; margin-bottom: 4px;">➕ Tambah 1 Siswa Baru Manual:</p>
+                    <div class="form-group"><input type="text" id="admSiswaNamaBaru" class="form-control" placeholder="Nama Lengkap Siswa"></div>
+                    <div class="form-group">
+                        <label role="none" for="admSiswaKelasTujuanBaru" style="font-size: 12px; font-weight: normal;">Masukkan ke Kelas:</label>
+                        <select id="admSiswaKelasTujuanBaru" class="form-control"></select>
+                    </div>
+                    <button class="btn-primary" onclick="adminTambahSiswaManual()" style="background-color: #e74c3c; margin-top:0;">➕ Tambahkan Siswa</button>
+                </div>
+            </div>
+            
+            <div class="admin-box" style="border: 1px solid #7f8c8d; background: #f8f9fa;">
+                <p style="font-weight: bold; color: #34495e; margin-bottom: 5px;">📁 Master Kelas & Hapus</p>
+                <div class="admin-data-list" id="admKelasListContainer"></div>
+                <div style="margin-top: 8px;">
+                    <input type="text" id="admKelasNama" class="form-control" placeholder="Contoh: Kelas IX - E">
+                    <button class="btn-primary" onclick="adminTambahKelas()" style="background-color:#2c3e50;">Tambah Kelas</button>
+                </div>
+            </div>
+
+            <div class="app-footer" style="margin-top: 15px; border-radius: 8px;">
+                Pengembang: <strong>Idas Mukodas, S.Pd.</strong> | SMP Plus An-Nuur
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db = null;
+        let isOfflineMode = true;
+
+        try {
+            if (window.location.protocol.startsWith('http')) {
+                const firebaseConfig = { apiKey: "AIzaSyCaCZy1v_zgmQCQBfXNZnO8ERM3eMBjc", databaseURL: "https://e-admin-guru-anuur-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "e-admin-guru-anuur" };
+                firebase.initializeApp(firebaseConfig); 
+                db = firebase.database();
+                isOfflineMode = false;
+            }
+        } catch(e) {
+            console.log("Offline Fallback Mode.");
+        }
+        
+        let listGuru = [{"username":"admin","pass":"admin123","nama":"ADMIN UTAMA","mapel":["Semua"],"kelasMengajar":[]},{"username":"idas","pass":"guru123","nama":"Idas Mukodas, S.Pd.","mapel":["Informatika","SENI PRAKARYA"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]},{"username":"ervin","pass":"guru123","nama":"Erviyanti, S.Pd.I","mapel":["PAI"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]},{"username":"h. hermana","pass":"guru123","nama":"H. Hermana, S.Pd.","mapel":["PKN"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas VIII - A","Kelas VIII - B","Kelas VIII - C","Kelas VIII - D","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]}];
+        let listKelas = ["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas VIII - A","Kelas VIII - B","Kelas VIII - C","Kelas VIII - D","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"];
+        let listMapel = ["Informatika","Matematika","IPA","IPS","PJOK","FIQIH","PAI","B. INGGRIS","B. INDONESIA","B. SUNDA","PKN","SENI PRAKARYA"];
+        let listSiswa = [{"nama":"Albina Putra","kelas":"Kelas VII - A"},{"nama":"Arfan Mustafa","kelas":"Kelas VII - A"},{"nama":"Azka Aditya","kelas":"Kelas VII - A"}];
+        
+        let userLoginAktif = null; let kelasAktifTerpilih = ""; let jenisNilaiAktif = ""; let modeRekapAktif = "";
+        let dbLogAbsensi = {}; let dbLogNilai = {};
+
+        function muatDataCloud() { 
+            if (isOfflineMode) {
+                const localGuru = localStorage.getItem('local_listGuru');
+                const localKelas = localStorage.getItem('local_listKelas');
+                const localMapel = localStorage.getItem('local_listMapel');
+                const localSiswa = localStorage.getItem('local_listSiswa');
+                if(localGuru) listGuru = JSON.parse(localGuru);
+                if(localKelas) listKelas = JSON.parse(localKelas);
+                if(localMapel) listMapel = JSON.parse(localMapel);
+                if(localSiswa) listSiswa = JSON.parse(localSiswa);
+                updateDropdownPilihanKelas();
+                return;
+            }
+            db.ref('data_sekolah_v2').once('value').then((snapshot) => { 
+                const dataCloud = snapshot.val(); 
+                if (dataCloud) { 
+                    if (dataCloud.listSiswa) listSiswa = dataCloud.listSiswa; 
+                    if (dataCloud.listKelas) listKelas = dataCloud.listKelas;
+                    if (dataCloud.listMapel) listMapel = dataCloud.listMapel;
+                    if (dataCloud.listGuru) listGuru = dataCloud.listGuru;
+                    dbLogAbsensi = dataCloud.logAbsensi || {}; 
+                    dbLogNilai = dataCloud.logNilai || {}; 
+                } 
+                updateDropdownPilihanKelas(); 
+            }); 
+        }
+
+        function simpanKeCloud() { 
+            if (isOfflineMode) {
+                localStorage.setItem('local_listGuru', JSON.stringify(listGuru));
+                localStorage.setItem('local_listKelas', JSON.stringify(listKelas));
+                localStorage.setItem('local_listMapel', JSON.stringify(listMapel));
+                localStorage.setItem('local_listSiswa', JSON.stringify(listSiswa));
+                return;
+            }
+            if(db) db.ref('data_sekolah_v2').set({ listGuru, listKelas, listMapel, listSiswa, logAbsensi: dbLogAbsensi, logNilai: dbLogNilai });
+        }
+
+        window.onload = function() { const tgl = new Date().toISOString().split('T')[0]; document.getElementById('absenTanggal').value = tgl; muatDataCloud(); };
+        
+        function updateDropdownPilihanKelas() {
+            const mainSelect = document.getElementById('mainDashboardKelasSelect'); mainSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            const klsList = (userLoginAktif && userLoginAktif.username !== 'admin') ? userLoginAktif.kelasMengajar : listKelas;
+            klsList.forEach(k => mainSelect.innerHTML += `<option value="${k}">${k}</option>`);
+            
+            const admImportSelect = document.getElementById('admImportKelasSelect'); 
+            const admFilterSelect = document.getElementById('admFilterKelasSiswa');
+            const admKelasTujuanBaru = document.getElementById('admSiswaKelasTujuanBaru');
+            const pindahTarget = document.getElementById('pindahSiswaTargetKelas');
+            
+            if(admImportSelect && admFilterSelect) { 
+                admImportSelect.innerHTML = ""; admFilterSelect.innerHTML = ""; if(admKelasTujuanBaru) admKelasTujuanBaru.innerHTML = ""; if(pindahTarget) pindahTarget.innerHTML = "";
+                listKelas.forEach(k => { 
+                    admImportSelect.innerHTML += `<option value="${k}">${k}</option>`; 
+                    admFilterSelect.innerHTML += `<option value="${k}">${k}</option>`; 
+                    if(admKelasTujuanBaru) admKelasTujuanBaru.innerHTML += `<option value="${k}">${k}</option>`;
+                    if(pindahTarget) pindahTarget.innerHTML += `<option value="${k}">${k}</option>`;
+                }); 
+            }
+        }
+
+        function handleMainKelasChange() {
+            kelasAktifTerpilih = document.getElementById('mainDashboardKelasSelect').value;
+            const statusText = document.getElementById('classSelectedStatus');
+            if (kelasAktifTerpilih === "") { statusText.innerText = "⚠️ Pilih kelas untuk mengaktifkan fitur."; statusText.style.color = "#dc2626"; ['menuAbsen','menuTugas','menuUlangan','menuUjian','menuRekap'].forEach(id => document.getElementById(id).classList.add('disabled')); }
+            else { statusText.innerText = `✓ Kelas Terkunci: ${kelasAktifTerpilih}`; statusText.style.color = "#16a34a"; ['menuAbsen','menuTugas','menuUlangan','menuUjian','menuRekap'].forEach(id => document.getElementById(id).classList.remove('disabled')); }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault(); const u = document.getElementById('username').value.trim().toLowerCase(); const p = document.getElementById('password').value.trim();
+            const akun = listGuru.find(g => g.username === u && g.pass === p);
+            if (akun) { userLoginAktif = akun; document.getElementById('teacherName').innerText = akun.nama; document.getElementById('teacherInfoBadge').innerText = `Mapel: ${akun.mapel.join(', ')}`; document.getElementById('appHeader').style.display = 'flex'; if (u === 'admin') document.getElementById('adminMenuButton').style.display = 'block'; updateDropdownPilihanKelas(); navigateTo('screenDashboard'); } else { alert("Login Gagal!"); }
+        }
+
+        function navigateTo(s) { document.querySelectorAll('.screen').forEach(d => d.classList.remove('active')); document.getElementById(s).classList.add('active'); }
+        function checkAndNavigate(s) { navigateTo(s); renderDaftarSiswaDanFormNilai(); }
+        
+        function checkAndNavigateNilai(j) { 
+            jenisNilaiAktif = j; document.getElementById('nilaiTitle').innerText = `Nilai ${j}`; document.getElementById('nilaiModeSelect').value = "baru"; toggleMetodeNilai(); navigateTo('screenNilai'); renderDaftarSiswaDanFormNilai(); 
+        }
+        function checkAndNavigateRekap() { navigateTo('screenRekap'); hitungNilaiAkhirTotal(); }
+
+        function toggleMetodeNilai() {
+            const mode = document.getElementById('nilaiModeSelect').value; const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-");
+            if (mode === 'baru') { document.getElementById('groupKomponenBaru').style.display = "block"; document.getElementById('groupKomponenLama').style.display = "none"; document.getElementById('nilaiKeterangan').value = ""; renderDaftarSiswaDanFormNilai(); } 
+            else { document.getElementById('groupKomponenBaru').style.display = "none"; document.getElementById('groupKomponenLama').style.display = "block"; const compSelect = document.getElementById('nilaiKomponenEksistingSelect'); compSelect.innerHTML = '<option value="">-- Pilih Komponen --</option>'; const obj = (dbLogNilai[cleanKey] && dbLogNilai[cleanKey][jenisNilaiAktif]) ? dbLogNilai[cleanKey][jenisNilaiAktif] : {}; Object.keys(obj).forEach(cId => { compSelect.innerHTML += `<option value="${cId}">${obj[cId].namaKomponen}</option>`; }); }
+        }
+
+        function loadNilaiKomponenLama() {
+            const cId = document.getElementById('nilaiKomponenEksistingSelect').value; if(!cId) return; const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-"); const dataNilaiSiswa = dbLogNilai[cleanKey][jenisNilaiAktif][cId].data || {};
+            document.querySelectorAll('#inputNilaiSiswaContainer .student-item').forEach((item) => { const nama = item.getAttribute('data-nama'); item.querySelector('.input-nilai-lapangan').value = dataNilaiSiswa[nama] !== undefined ? dataNilaiSiswa[nama] : 0; });
+        }
+
+        function renderDaftarSiswaDanFormNilai() {
+            const containerAbsen = document.getElementById('absenSiswaListContainer'); const containerNilai = document.getElementById('inputNilaiSiswaContainer');
+            containerAbsen.innerHTML = ""; containerNilai.innerHTML = ""; let counter = 0;
+            listSiswa.forEach((siswa) => {
+                if (siswa.kelas === kelasAktifTerpilih) {
+                    counter++;
+                    containerAbsen.innerHTML += `<div class="student-item" data-nama="${siswa.nama}"><span class="student-name"><strong>${counter}.</strong> ${siswa.nama}</span><div class="absensi-options"><input type="radio" id="s${counter}_h" name="s${counter}" value="H" checked><label for="s${counter}_h" class="h">H</label><input type="radio" id="s${counter}_s" name="s${counter}" value="S"><label for="s${counter}_s" class="s">S</label><input type="radio" id="s${counter}_i" name="s${counter}" value="I"><label for="s${counter}_i" class="i">I</label><input type="radio" id="s${counter}_a" name="s${counter}" value="A"><label for="s${counter}_a" class="a">A</label></div></div>`;
+                    containerNilai.innerHTML += `<div class="student-item" data-nama="${siswa.nama}"><span class="student-name"><strong>${counter}.</strong> ${siswa.nama}</span><input type="number" class="form-control input-nilai-lapangan" style="width:80px; text-align:center;" value="0"></div>`;
+                }
+            });
+            document.getElementById('totalMuridAbsenLabel').innerText = `Total Murid: ${counter} Anak`;
+            document.getElementById('totalMuridNilaiLabel').innerText = `Total Murid: ${counter} Anak`;
+        }
+
+        function simpanAbsensiMulti() {
+            const tgl = document.getElementById('absenTanggal').value; 
+            const bab = document.getElementById('absenBab').value.trim(); 
+            const materi = document.getElementById('absenMateri').value.trim();
+            if(!tgl || !bab || !materi) { alert("Tanggal, Bab, dan Materi wajib diisi!"); return; }
+            
+            const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-");
+            if(!dbLogAbsensi[cleanKey]) dbLogAbsensi[cleanKey] = {};
+            
+            const mapelGuru = (userLoginAktif && userLoginAktif.mapel && userLoginAktif.mapel.length > 0) ? userLoginAktif.mapel[0] : "Umum";
+            const cleanMapel = mapelGuru.replace(/[.#$\[\]]/g, "-");
+            
+            const pId = "Pertemuan_" + cleanMapel + "_" + tgl + "_" + Date.now();
+            
+            dbLogAbsensi[cleanKey][pId] = { 
+                tanggal: tgl, 
+                mapel: mapelGuru,
+                guru: userLoginAktif ? userLoginAktif.nama : "Admin",
+                bab: bab, 
+                materi: materi, 
+                data: {} 
+            };
+            
+            document.querySelectorAll('#absenSiswaListContainer .student-item').forEach((item, i) => { 
+                const nama = item.getAttribute('data-nama'); 
+                const status = item.querySelector(`input[name="s${i+1}"]:checked`).value; 
+                dbLogAbsensi[cleanKey][pId].data[nama] = status; 
+            });
+            
+            try { simpanKeCloud(); } catch(e){} 
+            alert(`Absensi Mata Pelajaran ${mapelGuru} Tanggal ${tgl} Berhasil Disimpan!`); 
+            navigateTo('screenDashboard');
+        }
+
+        function simpanNilaiMulti() {
+            const mode = document.getElementById('nilaiModeSelect').value; const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-"); let cId = "";
+            if (mode === 'baru') { const ket = document.getElementById('nilaiKeterangan').value.trim(); if(!ket) { alert("Isi keterangan komponen!"); return; } if(!dbLogNilai[cleanKey]) dbLogNilai[cleanKey] = {}; if(!dbLogNilai[cleanKey][jenisNilaiAktif]) dbLogNilai[cleanKey][jenisNilaiAktif] = {}; cId = ket.replace(/[.#$\[\]]/g, "-") + "_" + Date.now().toString().slice(-4); dbLogNilai[cleanKey][jenisNilaiAktif][cId] = { namaKomponen: ket, data: {} }; } 
+            else { cId = document.getElementById('nilaiKomponenEksistingSelect').value; if(!cId) { alert("Pilih komponen!"); return; } }
+            document.querySelectorAll('#inputNilaiSiswaContainer .student-item').forEach((item) => { const nama = item.getAttribute('data-nama'); const nilai = parseFloat(item.querySelector('.input-nilai-lapangan').value) || 0; dbLogNilai[cleanKey][jenisNilaiAktif][cId].data[nama] = nilai; });
+            try { simpanKeCloud(); } catch(e){} alert(`Data Nilai Berhasil Diperbarui!`); navigateTo('screenDashboard');
+        }
+
+        function bukaRekapSpesifik(tipe) {
+            modeRekapAktif = tipe; 
+            const judul = document.getElementById('judulRekapSpesifik'); 
+            const thead = document.getElementById('thRekapSpesifik'); 
+            const tbody = document.getElementById('tbRekapSpesifik'); 
+            const btnBack = document.getElementById('btnBackRekapSpesifik'); 
+            const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-");
+            
+            tbody.innerHTML = ""; 
+            navigateTo('screenRekapSpesifik');
+            
+            if (tipe === 'Absen') { 
+                judul.innerText = `📊 Rekap Absensi Semester - ${kelasAktifTerpilih}`; 
+                btnBack.setAttribute('onclick', "navigateTo('screenAbsensi')"); 
+                
+                const mapelGuru = (userLoginAktif && userLoginAktif.mapel && userLoginAktif.mapel.length > 0) ? userLoginAktif.mapel[0] : "";
+                const isAdmin = (userLoginAktif && userLoginAktif.username === 'admin');
+
+                const allPertemuanObj = dbLogAbsensi[cleanKey] || {};
+                let listPertemuan = Object.keys(allPertemuanObj).filter(pId => {
+                    if (isAdmin) return true;
+                    return allPertemuanObj[pId].mapel === mapelGuru;
+                }).sort((a, b) => {
+                    return new Date(allPertemuanObj[a].tanggal) - new Date(allPertemuanObj[b].tanggal);
+                });
+
+                let thHtml = `<tr><th style="text-align: left; position:sticky; left:0; background:#2c3e50;">No</th><th style="text-align: left; position:sticky; left:35px; background:#2c3e50;">Nama Siswa</th>`; 
+                listPertemuan.forEach(pId => { 
+                    thHtml += `<th>${allPertemuanObj[pId].tanggal} (${allPertemuanObj[pId].mapel})<br><small>${allPertemuanObj[pId].bab}</small></th>`; 
+                }); 
+                thead.innerHTML = thHtml + `</tr>`; 
+                
+                let num = 0; 
+                listSiswa.forEach(siswa => { 
+                    if (siswa.kelas === kelasAktifTerpilih) { 
+                        num++; 
+                        let trHtml = `<tr><td>${num}</td><td class="name-col">${siswa.nama}</td>`; 
+                        listPertemuan.forEach(pId => { 
+                            trHtml += `<td><span class="badge-nilai">${allPertemuanObj[pId].data[siswa.nama] || "-"}</span></td>`; 
+                        }); 
+                        tbody.innerHTML += trHtml + `</tr>`; 
+                    } 
+                }); 
+            } 
+            else { 
+                judul.innerText = `📊 Rekap Nilai ${jenisNilaiAktif} - ${kelasAktifTerpilih}`; 
+                btnBack.setAttribute('onclick', "navigateTo('screenNilai')"); 
+                const komponenObj = (dbLogNilai[cleanKey] && dbLogNilai[cleanKey][jenisNilaiAktif]) ? dbLogNilai[cleanKey][jenisNilaiAktif] : {}; 
+                const listKomponen = Object.keys(komponenObj); 
+                let thHtml = `<tr><th style="text-align: left; position:sticky; left:0; background:#2c3e50;">No</th><th style="text-align: left; position:sticky; left:35px; background:#2c3e50;">Nama Siswa</th>`; 
+                listKomponen.forEach(cId => { thHtml += `<th>${komponenObj[cId].namaKomponen}</th>`; }); 
+                thead.innerHTML = thHtml + `</tr>`; 
+                let num = 0; 
+                listSiswa.forEach(siswa => { 
+                    if (siswa.kelas === kelasAktifTerpilih) { 
+                        num++; 
+                        let trHtml = `<tr><td>${num}</td><td class="name-col">${siswa.nama}</td>`; 
+                        listKomponen.forEach(cId => { 
+                            trHtml += `<td><span class="badge-nilai">${komponenObj[cId].data[siswa.nama] !== undefined ? komponenObj[cId].data[siswa.nama] : "-"}</span></td>`; 
+                        }); 
+                        tbody.innerHTML += trHtml + `</tr>`; 
+                    } 
+                }); 
+            }
+        }
+
+        function hitungNilaiAkhirTotal() {
+            const tbody = document.getElementById('rekap-siswa-body'); tbody.innerHTML = ""; const cleanKey = kelasAktifTerpilih.replace(/[.#$\[\]]/g, "-");
+            
+            const mapelGuru = (userLoginAktif && userLoginAktif.mapel && userLoginAktif.mapel.length > 0) ? userLoginAktif.mapel[0] : "";
+            const isAdmin = (userLoginAktif && userLoginAktif.username === 'admin');
+
+            const allPertemuanObj = dbLogAbsensi[cleanKey] || {};
+            let listPertemuan = Object.values(allPertemuanObj).filter(p => {
+                if (isAdmin) return true;
+                return p.mapel === mapelGuru;
+            });
+
+            const tugasObj = (dbLogNilai[cleanKey] && dbLogNilai[cleanKey]['Tugas']) ? Object.values(dbLogNilai[cleanKey]['Tugas']) : []; 
+            const uhObj = (dbLogNilai[cleanKey] && dbLogNilai[cleanKey]['Ulangan']) ? Object.values(dbLogNilai[cleanKey]['Ulangan']) : []; 
+            const pasObj = (dbLogNilai[cleanKey] && dbLogNilai[cleanKey]['Ujian']) ? Object.values(dbLogNilai[cleanKey]['Ujian']) : [];
+            
+            let num = 0; 
+            listSiswa.forEach(siswa => { 
+                if(siswa.kelas === kelasAktifTerpilih) { 
+                    num++; 
+                    let totalPoinAbsen = 0; 
+                    listPertemuan.forEach(p => { 
+                        const st = p.data[siswa.nama] || "H"; 
+                        totalPoinAbsen += (st === 'H') ? 100 : ((st === 'A') ? 0 : 80); 
+                    }); 
+                    let rataAbsen = listPertemuan.length > 0 ? (totalPoinAbsen / listPertemuan.length) : 100; 
+                    let totalTugas = 0; 
+                    tugasObj.forEach(t => totalTugas += (t.data[siswa.nama] || 0)); 
+                    let rataTugas = tugasObj.length > 0 ? (totalTugas / tugasObj.length) : 0; 
+                    let totalUh = 0; 
+                    uhObj.forEach(u => totalUh += (u.data[siswa.nama] || 0)); 
+                    let rataUh = uhObj.length > 0 ? (totalUh / uhObj.length) : 0; 
+                    let nilaiPas = 0; 
+                    pasObj.forEach(p => nilaiPas = (p.data[siswa.nama] || 0)); 
+                    let na = (rataAbsen * 0.1) + (rataTugas * 0.2) + (rataUh * 0.3) + (nilaiPas * 0.4); 
+                    
+                    tbody.innerHTML += `<tr><td style="position:sticky; left:0; background:white;">${num}</td><td class="name-col" style="position:sticky; left:50px; background:white;">${siswa.nama}</td><td>${rataAbsen.toFixed(0)}</td><td>${rataTugas.toFixed(0)}</td><td>${rataUh.toFixed(0)}</td><td>${nilaiPas}</td><td><span class="badge-nilai">${na.toFixed(1)}</span></td></tr>`; 
+                } 
+            });
+        }
+
+        function eksporKeExcelSpesifik() { let namaFile = modeRekapAktif === 'Absen' ? `Rekap_Absensi_Multi_${kelasAktifTerpilih}` : `Rekap_Nilai_${jenisNilaiAktif}_Multi_${kelasAktifTerpilih}`; XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tabelRekapSpesifikExcel')), `${namaFile}.xlsx`); }
+        function eksporKeExcelTotal() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tabelRekapExcel')), `Rapor_Total_Semester_${kelasAktifTerpilih}.xlsx`); }
+        function logout() { userLoginAktif = null; document.getElementById('appHeader').style.display='none'; navigateTo('screenLogin'); }
+
+        /* ================= PANEL ADMIN & KONTROL GURU ================= */
+        function openAdminPanelScreen() { 
+            navigateTo('screenAdminPanel'); 
+            renderListGuruAdmin(); 
+            renderListMapelAdmin(); 
+            renderListKelasAdmin(); 
+            renderListSiswaAdmin();
+        }
+
+        function renderListGuruAdmin() {
+            const container = document.getElementById('admGuruListContainer'); 
+            if(!container) return;
+            container.innerHTML = "";
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            guruArr.forEach((guru, i) => {
+                if(!guru || guru.username === 'admin') return;
+                container.innerHTML += `
+                    <div class="admin-data-item">
+                        <span>💼 <strong>${guru.nama || 'Tanpa Nama'}</strong> (${(guru.mapel || []).join(', ')})</span>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn-warning-sm" onclick="bukaModalEditGuruSempurna(${i})">Distribusi Tugas</button>
+                            <button class="btn-danger-sm" onclick="adminHapusGuru(${i})">Hapus</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        function adminTambahGuruBaru() {
+            const nama = document.getElementById('admGuruNamaInput').value.trim();
+            const username = document.getElementById('admGuruUsernameInput').value.trim().toLowerCase();
+            const pass = document.getElementById('admGuruPassInput').value.trim();
+            if(!nama || !username || !pass) { alert("Semua kolom input data guru wajib terisi!"); return; }
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            if(guruArr.some(g => g.username === username)) { alert("Username sudah digunakan!"); return; }
+            guruArr.push({ username: username, pass: pass, nama: nama, mapel: [], kelasMengajar: [] });
+            listGuru = guruArr;
+            try { simpanKeCloud(); } catch(e){}
+            document.getElementById('admGuruNamaInput').value = "";
+            document.getElementById('admGuruUsernameInput').value = "";
+            document.getElementById('admGuruPassInput').value = "";
+            renderListGuruAdmin();
+            alert("Akun guru baru berhasil terdaftar di pangkalan data!");
+        }
+        
+        function adminHapusGuru(idx) {
+            if(confirm("Apakah Bapak yakin ingin menghapus akun guru ini dari sistem?")) {
+                let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+                guruArr.splice(idx, 1);
+                listGuru = guruArr;
+                try { simpanKeCloud(); } catch(e){}
+                renderListGuruAdmin();
+            }
+        }
+        
+        function bukaModalEditGuruSempurna(idx) {
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            const g = guruArr[idx]; 
+            if(!g) return;
+            document.getElementById('editGuruIndex').value = idx; 
+            document.getElementById('editGuruNama').value = g.nama;
+            const mSelect = document.getElementById('editGuruMapelMultiSelect'); 
+            if(mSelect) {
+                mSelect.innerHTML = ""; 
+                let mapelArr = Array.isArray(listMapel) ? listMapel : Object.values(listMapel);
+                mapelArr.forEach(m => { 
+                    let sel = (g.mapel && g.mapel.includes(m)) ? "selected" : ""; 
+                    mSelect.innerHTML += `<option value="${m}" ${sel}>${m}</option>`; 
+                });
+            }
+            const kSelect = document.getElementById('editGuruKelasMultiSelect'); 
+            if(kSelect) {
+                kSelect.innerHTML = ""; 
+                let kelasArr = Array.isArray(listKelas) ? listKelas : Object.values(listKelas);
+                kelasArr.forEach(k => { 
+                    let sel = (g.kelasMengajar && g.kelasMengajar.includes(k)) ? "selected" : ""; 
+                    kSelect.innerHTML += `<option value="${k}" ${sel}>${k}</option>`; 
+                });
+            }
+            const modal = document.getElementById('modalEditGuru');
+            if(modal) modal.style.setProperty('display', 'flex', 'important');
+        }
+        
+        function tutupModalEditGuru() { document.getElementById('modalEditGuru').style.display = "none"; }
+        
+        function adminProsesSimpanEditGuru() {
+            const idx = parseInt(document.getElementById('editGuruIndex').value);
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            if(isNaN(idx) || !guruArr[idx]) return;
+            guruArr[idx].mapel = [...document.getElementById('editGuruMapelMultiSelect').options].filter(o => o.selected).map(o => o.value);
+            guruArr[idx].kelasMengajar = [...document.getElementById('editGuruKelasMultiSelect').options].filter(o => o.selected).map(o => o.value);
+            listGuru = guruArr;
+            try { simpanKeCloud(); } catch(e) {}
+            tutupModalEditGuru(); 
+            renderListGuruAdmin(); 
+            alert("Tugas mengajar guru diperbarui secara sukses!");
+        }
+        
+        function renderListMapelAdmin() {
+            const c = document.getElementById('admMapelListContainer'); if(!c) return; c.innerHTML = "";
+            let mapelArr = Array.isArray(listMapel) ? listMapel : Object.values(listMapel);
+            mapelArr.forEach((m, idx) => { c.innerHTML += `<div class="admin-data-item"><span>📖 ${m}</span><button class="btn-danger-sm" onclick="adminHapusMapel(${idx})">Hapus</button></div>`; });
+        }
+        function adminTambahMapel() { const n = document.getElementById('admMapelNama').value.trim(); if(!n) return; if(!listMapel.includes(n)) { listMapel.push(n); try { simpanKeCloud(); } catch(e){} renderListMapelAdmin(); document.getElementById('admMapelNama').value=""; } }
+        function adminHapusMapel(idx) { if(confirm("Hapus mapel ini?")) { listMapel.splice(idx, 1); try { simpanKeCloud(); } catch(e){} renderListMapelAdmin(); } }
+        
+        function renderListKelasAdmin() {
+            const c = document.getElementById('admKelasListContainer'); if(!c) return; c.innerHTML = "";
+            let kelasArr = Array.isArray(listKelas) ? listKelas : Object.values(listKelas);
+            kelasArr.forEach((k, idx) => { c.innerHTML += `<div class="admin-data-item"><span>📁 ${k}</span><button class="btn-danger-sm" onclick="adminHapusKelas(${idx})">Hapus</button></div>`; });
+        }
+        function adminTambahKelas() { const k = document.getElementById('admKelasNama').value.trim(); if(!k) return; if(!listKelas.includes(k)) { listKelas.push(k); try { simpanKeCloud(); } catch(e){} updateDropdownPilihanKelas(); renderListKelasAdmin(); document.getElementById('admKelasNama').value=""; } }
+        function adminHapusKelas(idx) { if(confirm("Hapus master kelas ini?")) { listKelas.splice(idx, 1); try { simpanKeCloud(); } catch(e){} updateDropdownPilihanKelas(); renderListKelasAdmin(); } }
+        
+        /* ================= PENGELOLAAN SISWA (HAPUS, TAMBAH MANUAL & PINDAH KELAS) ================= */
+        function renderListSiswaAdmin() {
+            const filterEl = document.getElementById('admFilterKelasSiswa');
+            if(!filterEl) return;
+            const filterKls = filterEl.value; 
+            const c = document.getElementById('admSiswaListContainer'); 
+            if(!c) return; 
+            c.innerHTML = "";
+            let siswaArr = Array.isArray(listSiswa) ? listSiswa : Object.values(listSiswa);
+            siswaArr.forEach((s, idx) => { 
+                if(s.kelas === filterKls) { 
+                    c.innerHTML += `
+                        <div class="admin-data-item">
+                            <span>👤 ${s.nama}</span>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="btn-warning-sm" onclick="bukaModalPindahSiswa(${idx})">Pindah</button>
+                                <button class="btn-danger-sm" onclick="adminHapusSiswa(${idx})">Hapus</button>
+                            </div>
+                        </div>`; 
+                } 
+            });
+        }
+
+        function adminTambahSiswaManual() {
+            const nama = document.getElementById('admSiswaNamaBaru').value.trim();
+            const kelas = document.getElementById('admSiswaKelasTujuanBaru').value;
+            if(!nama) { alert("Nama siswa wajib diisi!"); return; }
+            let siswaArr = Array.isArray(listSiswa) ? listSiswa : Object.values(listSiswa);
+            siswaArr.push({ nama: nama, kelas: kelas });
+            listSiswa = siswaArr;
+            try { simpanKeCloud(); } catch(e){}
+            document.getElementById('admSiswaNamaBaru').value = "";
+            renderListSiswaAdmin();
+            alert(`Siswa ${nama} berhasil ditambahkan ke ${kelas}!`);
+        }
+
+        function adminHapusSiswa(idx) { 
+            if(confirm("Hapus siswa ini dari pangkalan data sekolah?")) { 
+                let siswaArr = Array.isArray(listSiswa) ? listSiswa : Object.values(listSiswa);
+                siswaArr.splice(idx, 1); 
+                listSiswa = siswaArr;
+                try { simpanKeCloud(); } catch(e){} 
+                renderListSiswaAdmin(); 
+            } 
+        }
+
+        function bukaModalPindahSiswa(idx) {
+            let siswaArr = Array.isArray(listSiswa) ? listSiswa : Object.values(listSiswa);
+            const s = siswaArr[idx];
+            if(!s) return;
+            document.getElementById('pindahSiswaIndex').value = idx;
+            document.getElementById('pindahSiswaNamaDisplay').value = s.nama;
+            document.getElementById('pindahSiswaTargetKelas').value = s.kelas;
+            const modal = document.getElementById('modalPindahSiswa');
+            if(modal) modal.style.setProperty('display', 'flex', 'important');
+        }
+
+        function tutupModalPindahSiswa() {
+            document.getElementById('modalPindahSiswa').style.display = "none";
+        }
+
+        function adminProsesPindahSiswa() {
+            const idx = parseInt(document.getElementById('pindahSiswaIndex').value);
+            const targetKelas = document.getElementById('pindahSiswaTargetKelas').value;
+            let siswaArr = Array.isArray(listSiswa) ? listSiswa : Object.values(listSiswa);
+            if(isNaN(idx) || !siswaArr[idx]) return;
+            siswaArr[idx].kelas = targetKelas;
+            listSiswa = siswaArr;
+            try { simpanKeCloud(); } catch(e){}
+            tutupModalPindahSiswa();
+            renderListSiswaAdmin();
+            alert("Siswa berhasil dipindahkan kelas!");
+        }
+
+        function adminProsesImportExcelMassal() {
+            const kls = document.getElementById('admImportKelasSelect').value; const ta = document.getElementById('admExcelPasteArea').value.trim(); if(!ta) return;
+            ta.split('\n').forEach(nama => { if(nama.trim()) listSiswa.push({ nama: nama.trim(), kelas: kls }); });
+            try { simpanKeCloud(); } catch(e){} document.getElementById('admExcelPasteArea').value = ""; renderListSiswaAdmin(); alert("Import Siswa Massal Berhasil!");
+        }
+    </script>
+</body>
+</html>
