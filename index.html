@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Admin SMAN 1 TARAJU</title>
+    <title>E-Admin SMAN 1 Taraju</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -56,7 +56,6 @@
         .modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background-color: rgba(0,0,0,0.7) !important; z-index: 99999999 !important; display: none; justify-content: center; align-items: center; }
         .modal-content { background-color: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
         
-        /* Footer Minimalis & Profesional */
         .app-footer { background-color: #1e293b; color: #38bdf8; text-align: center; padding: 12px 15px; font-size: 11px; margin-top: auto; border-top: 3px solid #3498db; line-height: 1.5; font-weight: 600; }
     </style>
 </head>
@@ -95,7 +94,7 @@
         <!-- LAYAR LOGIN -->
         <div id="screenLogin" class="screen active" style="justify-content: center; min-height: 100vh; padding: 30px 20px;">
             <div style="text-align: center; margin-bottom: 25px;">
-                <img src="LOGO.png" alt="Logo Sekolah" style="width: 90px; height: 90px; margin-bottom: 12px; object-fit: contain; border-radius: 50%;">
+                <img src="logo.jpeg" alt="Logo Sekolah" style="width: 90px; height: 90px; margin-bottom: 12px; object-fit: contain; border-radius: 50%;">
                 <h2 style="color: #2c3e50;">SMAN 1 TARAJU</h2>
             </div>
             <form id="loginForm" onsubmit="handleLogin(event)">
@@ -179,7 +178,6 @@
             <button id="btnBackRekapSpesifik" class="back-btn" onclick="navigateTo('screenDashboard')">← Kembali</button>
             <h3 id="judulRekapSpesifik" style="margin-bottom: 10px; color: #2c3e50; font-size:16px;">Rekap</h3>
             
-            <!-- Panel khusus info kirim WA massal jika rekap absen -->
             <div id="panelKirimWaMassal" style="display:none; margin-bottom: 10px; background: #e8f8f5; border: 1px solid #2ecc71; padding: 10px; border-radius: 8px;">
                 <p style="font-size: 12px; font-weight: bold; color: #27ae60; margin-bottom: 5px;">📲 Kirim Laporan Kehadiran ke Wali Murid</p>
                 <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih salah satu pertemuan di bawah atau kirim per baris siswa menggunakan tombol hijau WhatsApp.</p>
@@ -213,11 +211,39 @@
         <div id="screenAdminPanel" class="screen" style="overflow-y: auto; height: 100vh; padding-bottom: 50px;">
             <button class="back-btn" onclick="navigateTo('screenDashboard')">← Admin Panel</button>
             
+            <!-- IMPORT & TEMPLATE SISWA -->
             <div class="admin-box" style="border: 1px solid #3498db; background: #f0f9ff;">
-                <p style="font-weight: bold; color: #2980b9; margin-bottom: 5px;">📋 Import Siswa Massal</p>
-                <select id="admImportKelasSelect" class="form-control"></select>
-                <textarea id="admExcelPasteArea" class="form-control" rows="2" placeholder="Paste nama baris demi baris..."></textarea>
-                <button class="btn-primary" onclick="adminProsesImportExcelMassal()" style="margin-top:5px; background-color:#3498db;">⚡ Import Massal</button>
+                <p style="font-weight: bold; color: #2980b9; margin-bottom: 5px;">📋 Import & Template Siswa</p>
+                <button class="btn-whatsapp" onclick="downloadTemplateSiswa()" style="margin-bottom: 8px; width:100%; justify-content:center; background-color:#2980b9; padding:8px;">📥 Unduh Template Excel Siswa</button>
+                <select id="admImportKelasSelect" class="form-control" style="margin-bottom:5px;"></select>
+                <textarea id="admExcelPasteArea" class="form-control" rows="2" placeholder="Paste data dari excel (Nama & No WA)..."></textarea>
+                <button class="btn-primary" onclick="adminProsesImportExcelMassal()" style="margin-top:5px; background-color:#3498db;">⚡ Import Massal Siswa</button>
+            </div>
+
+            <!-- KELOLA & IMPORT EXPORT GURU (UNTUK 70 GURU) -->
+            <div class="admin-box" style="border: 1px solid #9b59b6; background: #faf5ff;">
+                <p style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;">👨‍🏫 Kelola & Import Excel 70 Guru SMAN 1 Taraju</p>
+                <div style="display:flex; gap:5px; margin-bottom:8px;">
+                    <button class="btn-whatsapp" onclick="downloadTemplateGuru()" style="flex:1; justify-content:center; background-color:#8e44ad; padding:8px;">📥 Template Guru</button>
+                    <button class="btn-whatsapp" onclick="exportDataGuruExcel()" style="flex:1; justify-content:center; background-color:#27ae60; padding:8px;">📤 Export Data Guru</button>
+                </div>
+                <div class="form-group" style="margin-bottom:5px;">
+                    <label style="font-size:11px; color:#555;">Upload File Excel / Paste Data Guru (Format: Nama | Username | Password):</label>
+                    <textarea id="admGuruPasteArea" class="form-control" rows="2" placeholder="Budi, S.Pd | budi123 | pass123"></textarea>
+                </div>
+                <button class="btn-primary" onclick="adminProsesImportGuruMassal()" style="background-color: #9b59b6; margin-top:0; padding:10px;">⚡ Import Massal 70 Guru</button>
+                
+                <div class="admin-data-list" id="admGuruListContainer" style="margin-top:10px;"></div>
+                
+                <div style="margin-top: 10px; border-top: 1px dashed #9b59b6; padding-top: 10px;">
+                    <p style="font-size: 12px; font-weight: bold; color: #8e44ad; margin-bottom: 4px;">➕ Tambah 1 Guru Manual:</p>
+                    <div class="form-group"><input type="text" id="admGuruNamaInput" class="form-control" placeholder="Nama Guru Lengkap"></div>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="admGuruUsernameInput" class="form-control" placeholder="Username">
+                        <input type="text" id="admGuruPassInput" class="form-control" placeholder="Password">
+                    </div>
+                    <button class="btn-primary" onclick="adminTambahGuruBaru()" style="background-color: #9b59b6; margin-top:8px;">➕ Daftarkan Akun Guru</button>
+                </div>
             </div>
 
             <div class="admin-box" style="border: 1px solid #e67e22; background: #fffaf5;">
@@ -227,21 +253,6 @@
                     <button class="btn-primary" onclick="adminTambahMapel()" style="margin-top:0; padding:0 15px; background-color:#d35400;">Tambah</button>
                 </div>
                 <div class="admin-data-list" id="admMapelListContainer"></div>
-            </div>
-            
-            <div class="admin-box" style="border: 1px solid #9b59b6; background: #faf5ff;">
-                <p style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;">🔄 Daftar Kontrol & Distribusi Guru</p>
-                <div class="admin-data-list" id="admGuruListContainer"></div>
-                
-                <div style="margin-top: 10px; border-top: 1px dashed #9b59b6; padding-top: 10px;">
-                    <p style="font-size: 12px; font-weight: bold; color: #8e44ad; margin-bottom: 4px;">➕ Tambah Akun Guru Baru:</p>
-                    <div class="form-group"><input type="text" id="admGuruNamaInput" class="form-control" placeholder="Nama Guru Lengkap"></div>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="text" id="admGuruUsernameInput" class="form-control" placeholder="Username">
-                        <input type="text" id="admGuruPassInput" class="form-control" placeholder="Password">
-                    </div>
-                    <button class="btn-primary" onclick="adminTambahGuruBaru()" style="background-color: #9b59b6; margin-top:8px;">➕ Daftarkan Akun Guru</button>
-                </div>
             </div>
 
             <!-- KOTAK KELOLA SISWA & NO WA ORANG TUA -->
@@ -266,7 +277,7 @@
                 <p style="font-weight: bold; color: #34495e; margin-bottom: 5px;">📁 Master Kelas & Hapus</p>
                 <div class="admin-data-list" id="admKelasListContainer"></div>
                 <div style="margin-top: 8px;">
-                    <input type="text" id="admKelasNama" class="form-control" placeholder="Contoh: Kelas IX - E">
+                    <input type="text" id="admKelasNama" class="form-control" placeholder="Contoh: Kelas X - 1">
                     <button class="btn-primary" onclick="adminTambahKelas()" style="background-color:#2c3e50;">Tambah Kelas</button>
                 </div>
             </div>
@@ -284,13 +295,14 @@
         try {
             if (window.location.protocol.startsWith('http')) {
                 const firebaseConfig = {
-                apiKey: "AIzaSyBLH8hJqIf_rBX00a75hOBUBkg26l2ckyw",
-                authDomain: "gurupintarsmantar.firebaseapp.com",
-                projectId: "gurupintarsmantar",
-                storageBucket: "gurupintarsmantar.firebasestorage.app",
-                messagingSenderId: "303380851351",
-                appId: "1:303380851351:web:6333d25cee8fa4487317d2"
-            };
+                    apiKey: "AIzaSyBLH8hJqIf_rBX00a75hOBUBkg26l2ckyw",
+                    authDomain: "gurupintarsmantar.firebaseapp.com",
+                    databaseURL: "https://gurupintarsmantar-default-rtdb.asia-southeast1.firebasedatabase.app",
+                    projectId: "gurupintarsmantar",
+                    storageBucket: "gurupintarsmantar.firebasestorage.app",
+                    messagingSenderId: "303380851351",
+                    appId: "1:303380851351:web:6333d25cee8fa4487317d2"
+                };
                 firebase.initializeApp(firebaseConfig); 
                 db = firebase.database();
                 isOfflineMode = false;
@@ -299,20 +311,20 @@
             console.log("Offline Fallback Mode.");
         }
         
-        let listGuru = [{"username":"admin","pass":"admin123","nama":"ADMIN UTAMA","mapel":["Semua"],"kelasMengajar":[]},{"username":"idas","pass":"guru123","nama":"Idas Mukodas, S.Pd.","mapel":["Informatika","SENI PRAKARYA"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]},{"username":"ervin","pass":"guru123","nama":"Erviyanti, S.Pd.I","mapel":["PAI"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]},{"username":"h. hermana","pass":"guru123","nama":"H. Hermana, S.Pd.","mapel":["PKN"],"kelasMengajar":["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas VIII - A","Kelas VIII - B","Kelas VIII - C","Kelas VIII - D","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"]}];
-        let listKelas = ["Kelas VII - A","Kelas VII - B","Kelas VII - C","Kelas VIII - A","Kelas VIII - B","Kelas VIII - C","Kelas VIII - D","Kelas IX - A","Kelas IX - B","Kelas IX - C","Kelas IX - D"];
-        let listMapel = ["Informatika","Matematika","IPA","IPS","PJOK","FIQIH","PAI","B. INGGRIS","B. INDONESIA","B. SUNDA","PKN","SENI PRAKARYA"];
-        let listSiswa = [{"nama":"Albina Putra","kelas":"Kelas VII - A","wa":"081234567890"},{"nama":"Arfan Mustafa","kelas":"Kelas VII - A","wa":"081987654321"},{"nama":"Azka Aditya","kelas":"Kelas VII - A","wa":"081122334455"}];
+        let listGuru = [{"username":"admin","pass":"admin123","nama":"ADMIN UTAMA","mapel":["Semua"],"kelasMengajar":[]},{"username":"idas","pass":"guru123","nama":"Idas Mukodas, S.Pd.","mapel":["Informatika","SENI PRAKARYA"],"kelasMengajar":["X.1","X.2","XI.1"]}];
+        let listKelas = ["X.1","X.2","XI.1","XI.2","XII.1","XII.2"];
+        let listMapel = ["Informatika","Matematika","IPA","IPS","PJOK","PAI","B. INGGRIS","B. INDONESIA","B. SUNDA","PKN","SEJARAH","EKONOMI"];
+        let listSiswa = [{"nama":"Albina Putra","kelas":"X.1","wa":"081234567890"},{"nama":"Arfan Mustafa","kelas":"X.1","wa":"081987654321"}];
         
         let userLoginAktif = null; let kelasAktifTerpilih = ""; let jenisNilaiAktif = ""; let modeRekapAktif = "";
         let dbLogAbsensi = {}; let dbLogNilai = {};
 
         function muatDataCloud() { 
             if (isOfflineMode) {
-                const localGuru = localStorage.getItem('local_listGuru');
-                const localKelas = localStorage.getItem('local_listKelas');
-                const localMapel = localStorage.getItem('local_listMapel');
-                const localSiswa = localStorage.getItem('local_listSiswa');
+                const localGuru = localStorage.getItem('local_listGuru_smantar');
+                const localKelas = localStorage.getItem('local_listKelas_smantar');
+                const localMapel = localStorage.getItem('local_listMapel_smantar');
+                const localSiswa = localStorage.getItem('local_listSiswa_smantar');
                 if(localGuru) listGuru = JSON.parse(localGuru);
                 if(localKelas) listKelas = JSON.parse(localKelas);
                 if(localMapel) listMapel = JSON.parse(localMapel);
@@ -320,7 +332,7 @@
                 updateDropdownPilihanKelas();
                 return;
             }
-            db.ref('data_sekolah_v2').once('value').then((snapshot) => { 
+            db.ref('data_smantar_v1').once('value').then((snapshot) => { 
                 const dataCloud = snapshot.val(); 
                 if (dataCloud) { 
                     if (dataCloud.listSiswa) listSiswa = dataCloud.listSiswa; 
@@ -338,13 +350,13 @@
 
         function simpanKeCloud() { 
             if (isOfflineMode) {
-                localStorage.setItem('local_listGuru', JSON.stringify(listGuru));
-                localStorage.setItem('local_listKelas', JSON.stringify(listKelas));
-                localStorage.setItem('local_listMapel', JSON.stringify(listMapel));
-                localStorage.setItem('local_listSiswa', JSON.stringify(listSiswa));
+                localStorage.setItem('local_listGuru_smantar', JSON.stringify(listGuru));
+                localStorage.setItem('local_listKelas_smantar', JSON.stringify(listKelas));
+                localStorage.setItem('local_listMapel_smantar', JSON.stringify(listMapel));
+                localStorage.setItem('local_listSiswa_smantar', JSON.stringify(listSiswa));
                 return;
             }
-            if(db) db.ref('data_sekolah_v2').set({ listGuru, listKelas, listMapel, listSiswa, logAbsensi: dbLogAbsensi, logNilai: dbLogNilai });
+            if(db) db.ref('data_smantar_v1').set({ listGuru, listKelas, listMapel, listSiswa, logAbsensi: dbLogAbsensi, logNilai: dbLogNilai });
         }
 
         window.onload = function() { const tgl = new Date().toISOString().split('T')[0]; document.getElementById('absenTanggal').value = tgl; muatDataCloud(); };
@@ -474,19 +486,36 @@
             return bersih;
         }
 
-        function kirimWaOrangTua(namaSiswa, nomorWa, statusHadir, tgl, mapel, bab) {
+        function kirimWaRekapHarianSiswa(namaSiswa, nomorWa, tglPilih, listPertemuanHariIni, allPertemuanObj) {
             const noTujuan = formatNomorWa(nomorWa);
             if(!noTujuan) {
                 alert(`Nomor WhatsApp untuk orang tua siswa ${namaSiswa} belum diatur di Panel Admin!`);
                 return;
             }
-            
-            let statusKet = "Hadir (H)";
-            if(statusHadir === 'S') statusKet = "Sakit (S)";
-            else if(statusHadir === 'I') statusKet = "Izin (I)";
-            else if(statusHadir === 'A') statusKet = "Tanpa Keterangan / Alpha (A)";
 
-            const pesan = `Assalamu'alaikum Wr. Wb.\n\nInformasi Kehadiran Siswa SMAN 1 TARAJU:\n\n*Nama Siswa:* ${namaSiswa}\n*Kelas:* ${kelasAktifTerpilih}\n*Hari/Tanggal:* ${tgl}\n*Mata Pelajaran:* ${mapel}\n*Materi/Bab:* ${bab}\n*Status Kehadiran:* *${statusKet}*\n\nPesan otomatis dikirim melalui Sistem E-Admin Guru SMAN 1 TARAJU.\nTerima kasih.`;
+            let rincianMapel = "";
+            let adaAlfa = false;
+            let adaSakitIzin = false;
+
+            listPertemuanHariIni.forEach(pId => {
+                const pert = allPertemuanObj[pId];
+                const status = pert.data[namaSiswa] || "H";
+                let ketStatus = "Hadir (H)";
+                if(status === 'S') { ketStatus = "Sakit (S)"; adaSakitIzin = true; }
+                else if(status === 'I') { ketStatus = "Izin (I)"; adaSakitIzin = true; }
+                else if(status === 'A') { ketStatus = "Alfa / Tanpa Keterangan (A)"; adaAlfa = true; }
+
+                rincianMapel += `- ${pert.mapel} (${pert.bab}): *${ketStatus}*\n`;
+            });
+
+            let kesimpulan = "✅ Hadir Penuh / Mengikuti Seluruh Pelajaran dengan Baik.";
+            if(adaAlfa) {
+                kesimpulan = "⚠️ PERHATIAN: Terdapat catatan *ALFA (Tanpa Keterangan)* pada mata pelajaran tertentu hari ini.";
+            } else if(adaSakitIzin) {
+                kesimpulan = "ℹ️ Terdapat catatan Sakit/Izin pada jam pelajaran tertentu hari ini.";
+            }
+
+            const pesan = `Assalamu'alaikum Wr. Wb.\n\nBerikut adalah Laporan Kehadiran Harian Siswa SMAN 1 TARAJU:\n\n*Nama Siswa:* ${namaSiswa}\n*Kelas:* ${kelasAktifTerpilih}\n*Hari/Tanggal:* ${tglPilih}\n\n*Rincian per Mata Pelajaran:*\n${rincianMapel}\n*Kesimpulan:* \n${kesimpulan}\n\nPesan otomatis dikirim melalui Sistem E-Admin Guru SMAN 1 Taraju.\nTerima kasih.`;
 
             const urlWa = `https://wa.me/${noTujuan}?text=${encodeURIComponent(pesan)}`;
             window.open(urlWa, '_blank');
@@ -532,12 +561,10 @@
                         num++; 
                         let trHtml = `<tr><td>${num}</td><td class="name-col">${siswa.nama}<br>`;
                         
-                        // Ambil pertemuan terakhir untuk tombol kirim WA cepat
                         if(listPertemuan.length > 0) {
                             const pIdTerakhir = listPertemuan[listPertemuan.length - 1];
                             const pertObj = allPertemuanObj[pIdTerakhir];
-                            const statusSiswa = pertObj.data[siswa.nama] || "H";
-                            trHtml += `<button class="btn-whatsapp" onclick="kirimWaOrangTua('${siswa.nama}', '${siswa.wa || ''}', '${statusSiswa}', '${pertObj.tanggal}', '${pertObj.mapel}', '${pertObj.bab}')">💬 Kirim WA Laporan</button>`;
+                            trHtml += `<button class="btn-whatsapp" onclick="kirimWaRekapHarianSiswa('${siswa.nama}', '${siswa.wa || ''}', '${pertObj.tanggal}', ['${pIdTerakhir}'], ${JSON.stringify(allPertemuanObj).replace(/"/g, '&quot;')})">💬 Kirim Rekap WA</button>`;
                         }
                         trHtml += `</td>`;
 
@@ -636,7 +663,7 @@
                     <div class="admin-data-item">
                         <span>💼 <strong>${guru.nama || 'Tanpa Nama'}</strong> (${(guru.mapel || []).join(', ')})</span>
                         <div style="display: flex; gap: 4px;">
-                            <button class="btn-warning-sm" onclick="bukaModalEditGuruSempurna(${i})">Distribusi Tugas</button>
+                            <button class="btn-warning-sm" onclick="bukaModalEditGuruSempurna(${i})">Distribusi</button>
                             <button class="btn-danger-sm" onclick="adminHapusGuru(${i})">Hapus</button>
                         </div>
                     </div>`;
@@ -657,11 +684,11 @@
             document.getElementById('admGuruUsernameInput').value = "";
             document.getElementById('admGuruPassInput').value = "";
             renderListGuruAdmin();
-            alert("Akun guru baru berhasil terdaftar di pangkalan data!");
+            alert("Akun guru baru berhasil terdaftar!");
         }
         
         function adminHapusGuru(idx) {
-            if(confirm("Apakah Bapak yakin ingin menghapus akun guru ini dari sistem?")) {
+            if(confirm("Apakah Bapak yakin ingin menghapus akun guru ini?")) {
                 let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
                 guruArr.splice(idx, 1);
                 listGuru = guruArr;
@@ -710,7 +737,74 @@
             try { simpanKeCloud(); } catch(e) {}
             tutupModalEditGuru(); 
             renderListGuruAdmin(); 
-            alert("Tugas mengajar guru diperbarui secara sukses!");
+            alert("Distribusi tugas guru diperbarui secara sukses!");
+        }
+
+        // ================= TEMPLATE & IMPORT EXPORT GURU MASSAL =================
+        function downloadTemplateGuru() {
+            let templateData = [
+                { Nama_Lengkap: "Dra. Hj. Siti Aminah, M.Pd.", Username: "siti", Password: "guru123" },
+                { Nama_Lengkap: "Budi Santoso, S.Pd.", Username: "budi", Password: "guru123" }
+            ];
+            let ws = XLSX.utils.json_to_sheet(templateData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template_Guru");
+            XLSX.writeFile(wb, "Template_Import_Guru_SMAN1Taraju.xlsx");
+        }
+
+        function exportDataGuruExcel() {
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            let exportData = guruArr.filter(g => g.username !== 'admin').map(g => ({
+                Nama_Lengkap: g.nama,
+                Username: g.username,
+                Password: g.pass,
+                Mapel_Diampu: (g.mapel || []).join(', '),
+                Kelas_Mengajar: (g.kelasMengajar || []).join(', ')
+            }));
+            let ws = XLSX.utils.json_to_sheet(exportData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data_Guru");
+            XLSX.writeFile(wb, "Data_Semua_Guru_SMAN1Taraju.xlsx");
+        }
+
+        function adminProsesImportGuruMassal() {
+            const text = document.getElementById('admGuruPasteArea').value.trim();
+            if(!text) { alert("Silakan masukkan atau paste data guru terlebih dahulu!"); return; }
+            
+            let guruArr = Array.isArray(listGuru) ? listGuru : Object.values(listGuru);
+            let count = 0;
+            
+            text.split('\n').forEach(line => {
+                let parts = line.includes('\t') ? line.split('\t') : line.split(',');
+                if(parts.length >= 3) {
+                    let nama = parts[0].trim();
+                    let username = parts[1].trim().toLowerCase();
+                    let pass = parts[2].trim();
+                    
+                    if(nama && username && !guruArr.some(g => g.username === username)) {
+                        guruArr.push({ username: username, pass: pass, nama: nama, mapel: [], kelasMengajar: [] });
+                        count++;
+                    }
+                }
+            });
+            
+            listGuru = guruArr;
+            try { simpanKeCloud(); } catch(e){}
+            document.getElementById('admGuruPasteArea').value = "";
+            renderListGuruAdmin();
+            alert(`Berhasil mengimport ${count} data guru baru secara massal!`);
+        }
+
+        // ================= TEMPLATE & IMPORT SISWA =================
+        function downloadTemplateSiswa() {
+            let templateSiswa = [
+                { Nama_Siswa: "Ahmad Fauzi", No_WhatsApp_Wali: "081234567890" },
+                { Nama_Siswa: "Siti Rahma", No_WhatsApp_Wali: "081987654321" }
+            ];
+            let ws = XLSX.utils.json_to_sheet(templateSiswa);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template_Siswa");
+            XLSX.writeFile(wb, "Template_Import_Siswa.xlsx");
         }
         
         function renderListMapelAdmin() {
@@ -729,7 +823,6 @@
         function adminTambahKelas() { const k = document.getElementById('admKelasNama').value.trim(); if(!k) return; if(!listKelas.includes(k)) { listKelas.push(k); try { simpanKeCloud(); } catch(e){} updateDropdownPilihanKelas(); renderListKelasAdmin(); document.getElementById('admKelasNama').value=""; } }
         function adminHapusKelas(idx) { if(confirm("Hapus master kelas ini?")) { listKelas.splice(idx, 1); try { simpanKeCloud(); } catch(e){} updateDropdownPilihanKelas(); renderListKelasAdmin(); } }
         
-        /* ================= PENGELOLAAN SISWA & NO WA ================= */
         function renderListSiswaAdmin() {
             const filterEl = document.getElementById('admFilterKelasSiswa');
             if(!filterEl) return;
@@ -812,7 +905,14 @@
 
         function adminProsesImportExcelMassal() {
             const kls = document.getElementById('admImportKelasSelect').value; const ta = document.getElementById('admExcelPasteArea').value.trim(); if(!ta) return;
-            ta.split('\n').forEach(nama => { if(nama.trim()) listSiswa.push({ nama: nama.trim(), kelas: kls, wa: "" }); });
+            ta.split('\n').forEach(row => {
+                let parts = row.includes('\t') ? row.split('\t') : row.split(',');
+                let nama = parts[0] ? parts[0].trim() : "";
+                let wa = parts[1] ? parts[1].trim() : "";
+                if(nama && isNaN(nama)) {
+                    listSiswa.push({ nama: nama, kelas: kls, wa: wa });
+                }
+            });
             try { simpanKeCloud(); } catch(e){} document.getElementById('admExcelPasteArea').value = ""; renderListSiswaAdmin(); alert("Import Siswa Massal Berhasil!");
         }
     </script>
